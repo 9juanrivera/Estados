@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Creador de Estados WhatsApp</title>
+  <link rel="stylesheet" href="wpp.css" />
+</head>
+<body>
+
+  <!-- PREVIEW -->
+  <div id="estado-preview">
+    <div id="estado-texto">Hola mundo</div>
+  </div>
+
+  <!-- CONTROLES -->
+  <div id="controles">
+
+    <div>
+      <p class="lbl">Escribe tu estado</p>
+      <textarea id="msg-box" placeholder="Escribe aquí tu estado...">Hola mundo</textarea>
+    </div>
+
+    <div>
+      <p class="lbl">Tamaño del texto</p>
+      <div class="fila">
+        <label>Texto</label>
+        <input type="range" id="size-r" min="20" max="100" value="60" step="1" />
+        <span id="size-v">60px</span>
+      </div>
+    </div>
+
+    <div>
+      <p class="lbl">Efecto borroso</p>
+      <div class="fila">
+        <label>Blur</label>
+        <input type="range" id="blur-r" min="0" max="12" value="0" step="0.5" />
+        <span id="blur-v">0px</span>
+      </div>
+    </div>
+
+    <div>
+      <p class="lbl">Color de fondo</p>
+      <div class="paleta" id="paleta"></div>
+      <div class="custom-row">
+        <label>Color 1</label>
+        <input type="color" id="c1" value="#128c7e" />
+        <label>Color 2</label>
+        <input type="color" id="c2" value="#25d366" />
+      </div>
+    </div>
+
+    <button id="btn-captura">Captura</button>
+
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="wpp.js"></script>
+</body>
+</html>
