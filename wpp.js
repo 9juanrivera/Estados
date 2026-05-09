@@ -29,7 +29,6 @@ function setBg() {
   preview.style.background = `linear-gradient(135deg, ${c1.value}, ${c2.value})`;
 }
 
-// Generar botones de paleta
 paletas.forEach(([a, b], i) => {
   const s = document.createElement('button');
   s.className = 'sw' + (i === 0 ? ' active' : '');
@@ -47,26 +46,22 @@ paletas.forEach(([a, b], i) => {
   palEl.appendChild(s);
 });
 
-// Texto en tiempo real
 msgBox.addEventListener('input', () => {
   texto.textContent = msgBox.value || ' ';
 });
 
-// Tamaño
 texto.style.fontSize = '60px';
 sizeR.addEventListener('input', () => {
   sizeV.textContent = sizeR.value + 'px';
   texto.style.fontSize = sizeR.value + 'px';
 });
 
-// Blur
 blurR.addEventListener('input', () => {
   const v = parseFloat(blurR.value).toFixed(1);
   blurV.textContent = v + 'px';
   texto.style.filter = `blur(${v}px)`;
 });
 
-// Colores personalizados
 c1.addEventListener('input', () => {
   if (active) { active.classList.remove('active'); active = null; }
   setBg();
@@ -85,22 +80,93 @@ btnCaptura.addEventListener('click', () => {
   btnCaptura.classList.add('cargando');
   btnCaptura.disabled = true;
 
-  html2canvas(document.getElementById('estado-preview'), {
-    scale: 2,          // doble resolución para que quede nítida
-    useCORS: true,
-    backgroundColor: null
-  }).then(canvas => {
-    const enlace = document.createElement('a');
-    enlace.download = 'Estado.png';
-    enlace.href = canvas.toDataURL('image/png');
-    enlace.click();
+  const rect   = preview.getBoundingClientRect();
+  const escala = Math.max(window.devicePixelRatio || 1, 3);
+  const W      = Math.round(rect.width)  * escala;
+  const H      = Math.round(rect.height) * escala;
 
-    btnCaptura.textContent = textoOriginal;
-    btnCaptura.classList.remove('cargando');
-    btnCaptura.disabled = false;
-  }).catch(() => {
-    btnCaptura.textContent = 'Error al capturar';
-    btnCaptura.classList.remove('cargando');
-    btnCaptura.disabled = false;
-  });
+  const canvas  = document.createElement('canvas');
+  canvas.width  = W;
+  canvas.height = H;
+  const ctx     = canvas.getContext('2d');
+
+  // 1. Fondo con gradiente 135°
+  const grad = ctx.createLinearGradient(0, 0, W, H);
+  grad.addColorStop(0, c1.value);
+  grad.addColorStop(1, c2.value);
+  ctx.fillStyle = grad;
+
+  const r = 20 * escala;
+  ctx.beginPath();
+  ctx.moveTo(r, 0);
+  ctx.lineTo(W - r, 0);
+  ctx.quadraticCurveTo(W, 0, W, r);
+  ctx.lineTo(W, H - r);
+  ctx.quadraticCurveTo(W, H, W - r, H);
+  ctx.lineTo(r, H);
+  ctx.quadraticCurveTo(0, H, 0, H - r);
+  ctx.lineTo(0, r);
+  ctx.quadraticCurveTo(0, 0, r, 0);
+  ctx.closePath();
+  ctx.fill();
+
+  // 2. Texto con blur aplicado en canvas (igual al preview)
+  const fontSize   = parseFloat(texto.style.fontSize || '60') * escala;
+  const blurValor  = parseFloat(blurR.value); // valor original en px del CSS
+  const blurCanvas = blurValor * escala;       // escalado para el canvas
+  const mensaje    = msgBox.value || ' ';
+
+  ctx.font         = `700 ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+  ctx.fillStyle    = '#ffffff';
+  ctx.textAlign    = 'center';
+  ctx.textBaseline = 'middle';
+
+  // Sombra suave
+  ctx.shadowColor   = 'rgba(0,0,0,0.2)';
+  ctx.shadowBlur    = 20 * escala;
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 2 * escala;
+
+  // ✅ Aquí se aplica el blur al texto en el canvas
+  if (blurCanvas > 0) {
+    ctx.filter = `blur(${blurCanvas}px)`;
+  }
+
+  // Word-wrap manual
+  const maxWidth   = W - 48 * escala;
+  const lineHeight = fontSize * 1.2;
+  const lineas     = [];
+  let lineaActual  = '';
+
+  for (const token of mensaje.split('\n')) {
+    const palabras = token.split(' ');
+    let linea = '';
+    for (const p of palabras) {
+      const prueba = linea ? linea + ' ' + p : p;
+      if (ctx.measureText(prueba).width > maxWidth && linea) {
+        lineas.push(linea);
+        linea = p;
+      } else {
+        linea = prueba;
+      }
+    }
+    lineas.push(linea);
+  }
+
+  const totalAltura = lineas.length * lineHeight;
+  let y = H / 2 - totalAltura / 2 + lineHeight / 2;
+  for (const linea of lineas) {
+    ctx.fillText(linea, W / 2, y);
+    y += lineHeight;
+  }
+
+  // 3. Descargar
+  const enlace    = document.createElement('a');
+  enlace.download = 'Estado.png';
+  enlace.href     = canvas.toDataURL('image/png');
+  enlace.click();
+
+  btnCaptura.textContent = textoOriginal;
+  btnCaptura.classList.remove('cargando');
+  btnCaptura.disabled = false;
 });
