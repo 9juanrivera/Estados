@@ -92,7 +92,7 @@ btnCaptura.addEventListener('click', () => {
   }).then(canvas => {
     const enlace = document.createElement('a');
     enlace.download = 'Estado.png';
-    enlace.href = canvas.toDataURL('Estados/png');
+    enlace.href = canvas.toDataURL('image/png');
     enlace.click();
 
     btnCaptura.textContent = textoOriginal;
